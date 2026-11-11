@@ -1,0 +1,162 @@
+<?php
+/** @var Ultradev_Picpay_Block_Form $this */
+$code  = $this->getMethodCode();
+$types = $this->getTypes();
+$installments = $this->getInstallments();
+$descriptions = [
+    'card'   => 'Pague em até ' . count($installments) . 'x',
+    'pix'    => 'Aprovação na hora',
+    'wallet' => 'Pague com o saldo no app PicPay',
+];
+?>
+<ul class="form-list picpay-form" id="payment_form_<?php echo $code ?>" style="display:none;">
+    <li>
+        <input type="hidden" name="payment[picpay_type]" id="<?php echo $code ?>_type" value="" />
+        <p class="picpay-hint">Escolha como pagar com PicPay</p>
+
+        <?php foreach ($types as $type => $label): ?>
+            <button type="button" class="picpay-sub" data-type="<?php echo $type ?>"
+                    aria-expanded="false" aria-controls="picpay_panel_<?php echo $type ?>">
+                <span class="picpay-sub-label"><?php echo $this->escapeHtml($label) ?></span>
+                <span class="picpay-sub-desc"><?php echo $this->escapeHtml($descriptions[$type]) ?></span>
+            </button>
+
+            <div class="picpay-panel" id="picpay_panel_<?php echo $type ?>" style="display:none;">
+                <?php if ($type === 'card'): ?>
+                    <div class="picpay-field">
+                        <label for="<?php echo $code ?>_cc_number">Número do cartão</label>
+                        <input type="text" inputmode="numeric" autocomplete="cc-number" maxlength="23"
+                               id="<?php echo $code ?>_cc_number" name="payment[cc_number]"
+                               class="input-text required-entry validate-picpay-cc" />
+                    </div>
+                    <div class="picpay-field">
+                        <label for="<?php echo $code ?>_cc_owner">Nome impresso no cartão</label>
+                        <input type="text" autocomplete="cc-name"
+                               id="<?php echo $code ?>_cc_owner" name="payment[cc_owner]"
+                               class="input-text required-entry" />
+                    </div>
+                    <div class="picpay-row">
+                        <div class="picpay-field">
+                            <label for="<?php echo $code ?>_cc_exp">Validade (MM/AA)</label>
+                            <input type="text" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/AA"
+                                   id="<?php echo $code ?>_cc_exp" name="payment[cc_exp]"
+                                   class="input-text required-entry validate-picpay-exp" />
+                        </div>
+                        <div class="picpay-field">
+                            <label for="<?php echo $code ?>_cc_cid">CVV</label>
+                            <input type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4"
+                                   id="<?php echo $code ?>_cc_cid" name="payment[cc_cid]"
+                                   class="input-text required-entry validate-digits" />
+                        </div>
+                    </div>
+                    <div class="picpay-field">
+                        <label for="<?php echo $code ?>_cc_installments">Parcelas</label>
+                        <select id="<?php echo $code ?>_cc_installments" name="payment[cc_installments]" class="required-entry">
+                            <?php foreach ($installments as $n => $text): ?>
+                                <option value="<?php echo (int) $n ?>"><?php echo $this->escapeHtml($text) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php elseif ($type === 'pix'): ?>
+                    <p>Ao finalizar o pedido você verá o QR Code e o código Pix copia e cola.
+                        O código vale por <?php echo max(1, (int) $this->getPicpayHelper()->getConfig('pix_expiration')) ?> minutos.</p>
+                <?php else: ?>
+                    <p>1. Finalize o pedido para gerar o QR Code.<br />
+                        2. Abra o app PicPay e toque em Pagar.<br />
+                        3. Escaneie o código e confirme o pagamento.</p>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+
+        <div class="picpay-field" id="picpay_taxvat_wrap" style="display:none;">
+            <label for="<?php echo $code ?>_taxvat">CPF/CNPJ do pagador</label>
+            <input type="text" inputmode="numeric" maxlength="18"
+                   id="<?php echo $code ?>_taxvat" name="payment[picpay_taxvat]"
+                   value="<?php echo $this->escapeHtml($this->getDefaultTaxvat()) ?>"
+                   class="input-text required-entry validate-picpay-doc" />
+        </div>
+    </li>
+</ul>
+<script type="text/javascript">
+//<![CDATA[
+(function () {
+    var root = document.getElementById('payment_form_<?php echo $code ?>');
+    if (!root || root.getAttribute('data-picpay-init')) { return; }
+    root.setAttribute('data-picpay-init', '1');
+
+    var typeInput = document.getElementById('<?php echo $code ?>_type');
+    var taxWrap = document.getElementById('picpay_taxvat_wrap');
+    var buttons = root.querySelectorAll('.picpay-sub');
+
+    // Usa style.display inline: o Validation do Prototype só ignora campos ocultos assim.
+    function select(type) {
+        typeInput.value = type;
+        for (var i = 0; i < buttons.length; i++) {
+            var t = buttons[i].getAttribute('data-type');
+            var on = (t === type);
+            buttons[i].className = 'picpay-sub' + (on ? ' picpay-on' : '');
+            buttons[i].setAttribute('aria-expanded', on ? 'true' : 'false');
+            document.getElementById('picpay_panel_' + t).style.display = on ? 'block' : 'none';
+        }
+        taxWrap.style.display = type ? 'block' : 'none';
+    }
+
+    root.addEventListener('click', function (e) {
+        var el = e.target;
+        while (el && el !== root && !(el.className && String(el.className).indexOf('picpay-sub') !== -1 && el.getAttribute('data-type'))) {
+            el = el.parentNode;
+        }
+        if (!el || el === root) { return; }
+        var t = el.getAttribute('data-type');
+        select(typeInput.value === t ? '' : t); // clicar de novo fecha
+    });
+
+    function digits(v) { return String(v || '').replace(/\D/g, ''); }
+    root.addEventListener('input', function (e) {
+        var id = e.target.id || '';
+        var v = digits(e.target.value);
+        if (id === '<?php echo $code ?>_cc_number') {
+            e.target.value = v.substring(0, 19).replace(/(.{4})/g, '$1 ').replace(/\s+$/, '');
+        } else if (id === '<?php echo $code ?>_cc_exp') {
+            v = v.substring(0, 4);
+            e.target.value = v.length > 2 ? v.substring(0, 2) + '/' + v.substring(2) : v;
+        } else if (id === '<?php echo $code ?>_cc_cid') {
+            e.target.value = v.substring(0, 4);
+        } else if (id === '<?php echo $code ?>_taxvat') {
+            if (v.length <= 11) {
+                e.target.value = v.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            } else {
+                v = v.substring(0, 14);
+                e.target.value = v.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+                    .replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
+            }
+        }
+    });
+
+    if (typeof Validation !== 'undefined' && Validation.add) {
+        Validation.add('validate-picpay-cc', 'Número de cartão inválido.', function (v) {
+            v = digits(v);
+            if (v.length < 13) { return false; }
+            var sum = 0, alt = false;
+            for (var i = v.length - 1; i >= 0; i--) {
+                var n = parseInt(v.charAt(i), 10);
+                if (alt) { n *= 2; if (n > 9) { n -= 9; } }
+                sum += n; alt = !alt;
+            }
+            return sum % 10 === 0;
+        });
+        Validation.add('validate-picpay-exp', 'Validade inválida.', function (v) {
+            var m = /^(\d{2})\/(\d{2})$/.exec(v);
+            if (!m) { return false; }
+            var month = parseInt(m[1], 10), year = 2000 + parseInt(m[2], 10), now = new Date();
+            return month >= 1 && month <= 12 &&
+                (year > now.getFullYear() || (year === now.getFullYear() && month >= now.getMonth() + 1));
+        });
+        Validation.add('validate-picpay-doc', 'Informe um CPF ou CNPJ válido.', function (v) {
+            var l = digits(v).length;
+            return l === 11 || l === 14;
+        });
+    }
+}());
+//]]>
+</script>
