@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Ultradev_Picpay>
+            <active>true</active>
+            <codePool>community</codePool>
+            <depends>
+                <Mage_Payment/>
+                <Mage_Sales/>
+            </depends>
+        </Ultradev_Picpay>
+    </modules>
+</config>
