@@ -88,20 +88,11 @@ class Ultradev_Picpay_Model_Method extends Mage_Payment_Model_Method_Abstract
         $info->setAdditionalInformation('picpay_customer_taxvat', $helper->digits($data->getData('picpay_taxvat')));
 
         if ($type === Ultradev_Picpay_Helper_Data::TYPE_CARD) {
-            $number = $helper->digits($data->getData('cc_number'));
-            $exp = $helper->digits($data->getData('cc_exp'));
-            $month = (int) substr($exp, 0, 2);
-            $year = (int) substr($exp, 2);
-            if ($year > 0 && $year < 100) {
-                $year += 2000;
-            }
-            // cc_number e cc_cid NÃO são colunas: ficam só em memória (nunca gravados)
-            $info->setCcNumber($number)
-                ->setCcCid($helper->digits($data->getData('cc_cid')))
-                ->setCcOwner(trim((string) $data->getData('cc_owner')))
-                ->setCcExpMonth($month)
-                ->setCcExpYear($year)
-                ->setCcLast4(substr($number, -4));
+            // O número/CVV do cartão nunca chegam aqui: o navegador envia só o token temporário do SDK.
+            // O token fica apenas em memória (não é coluna, não é gravado no banco).
+            $info->setPicpayCardToken(trim((string) $data->getData('picpay_card_token')));
+            $info->setCcLast4(substr($helper->digits($data->getData('picpay_card_last4')), -4));
+            $info->setAdditionalInformation('cc_brand', preg_replace('/[^A-Za-z]/', '', (string) $data->getData('picpay_card_brand')));
             $info->setAdditionalInformation('cc_installments', max(1, (int) $data->getData('cc_installments')));
         }
         return $this;
@@ -136,48 +127,16 @@ class Ultradev_Picpay_Model_Method extends Mage_Payment_Model_Method_Abstract
 
     protected function _validateCard($info)
     {
-        $number = (string) $info->getCcNumber();
-        if (!$this->_luhn($number) || strlen($number) < 13) {
-            Mage::throwException('Número do cartão inválido.');
-        }
-        $cvv = (string) $info->getCcCid();
-        if (!preg_match('/^\d{3,4}$/', $cvv)) {
-            Mage::throwException('Código de segurança (CVV) inválido.');
-        }
-        $month = (int) $info->getCcExpMonth();
-        $year = (int) $info->getCcExpYear();
-        if ($month < 1 || $month > 12 || $year < (int) date('Y') || ($year === (int) date('Y') && $month < (int) date('n'))) {
-            Mage::throwException('Validade do cartão inválida.');
-        }
-        if (trim((string) $info->getCcOwner()) === '') {
-            Mage::throwException('Informe o nome impresso no cartão.');
+        $token = (string) $info->getPicpayCardToken();
+        // mesma regex da API: ^[a-zA-Z0-9.\/\_\+-]*$
+        if (strlen($token) < 10 || !preg_match('/^[a-zA-Z0-9.\/_+-]+$/', $token)) {
+            Mage::throwException('Não foi possível validar o cartão. Informe os dados novamente.');
         }
         $max = max(1, (int) $this->_helper()->getConfig('max_installments'));
         $installments = (int) $info->getAdditionalInformation('cc_installments');
         if ($installments < 1 || $installments > $max) {
             Mage::throwException('Número de parcelas inválido.');
         }
-    }
-
-    protected function _luhn($number)
-    {
-        if ($number === '' || !ctype_digit($number)) {
-            return false;
-        }
-        $sum = 0;
-        $alt = false;
-        for ($i = strlen($number) - 1; $i >= 0; $i--) {
-            $n = (int) $number[$i];
-            if ($alt) {
-                $n *= 2;
-                if ($n > 9) {
-                    $n -= 9;
-                }
-            }
-            $sum += $n;
-            $alt = !$alt;
-        }
-        return $sum % 10 === 0;
     }
 
     /**
@@ -192,13 +151,6 @@ class Ultradev_Picpay_Model_Method extends Mage_Payment_Model_Method_Abstract
         $payment = $this->getInfoInstance();
         $order = $payment->getOrder();
         $type = (string) $payment->getAdditionalInformation('picpay_type');
-
-        if ($type === Ultradev_Picpay_Helper_Data::TYPE_CARD) {
-            $check = $api->verifyCard($builder->cardVerification($order, $payment));
-            if ($check['status'] >= 300) {
-                Mage::throwException('Não foi possível validar os dados do cartão. Confira e tente novamente.');
-            }
-        }
 
         $result = $api->createCharge($type, $builder->charge($type, $order, $payment));
         $body = $result['body'];
@@ -231,8 +183,8 @@ class Ultradev_Picpay_Model_Method extends Mage_Payment_Model_Method_Abstract
             $payment->setAdditionalInformation('pix_expires_at', time() + ($minutes > 0 ? $minutes : 30) * 60);
         }
         if ($type === Ultradev_Picpay_Helper_Data::TYPE_CARD) {
-            // nunca persistir PAN/CVV
-            $payment->setCcNumber(null)->setCcCid(null);
+            // token temporário é de uso único: não manter no objeto
+            $payment->setPicpayCardToken(null);
         }
 
         $order->setData('picpay_charge_id', $chargeId);
