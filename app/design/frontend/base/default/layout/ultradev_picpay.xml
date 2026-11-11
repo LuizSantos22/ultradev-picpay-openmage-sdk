@@ -6,7 +6,16 @@
         </reference>
     </default>
 
+    <checkout_onepage_index>
+        <reference name="head">
+            <action method="addItem"><type>skin_js</type><name>ultradev/picpay/picpay-form.js</name></action>
+        </reference>
+    </checkout_onepage_index>
+
     <checkout_onepage_success>
+        <reference name="head">
+            <action method="addItem"><type>skin_js</type><name>ultradev/picpay/picpay-success.js</name></action>
+        </reference>
         <reference name="content">
             <block type="ultradev_picpay/success" name="ultradev_picpay.success" after="checkout.success" template="ultradev/picpay/success.phtml"/>
         </reference>
