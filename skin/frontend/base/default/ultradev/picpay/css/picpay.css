@@ -1,0 +1,18 @@
+.picpay-form .picpay-hint { margin: 0 0 8px; font-size: 12px; color: #666; }
+.picpay-form .picpay-sub { display: block; width: 100%; box-sizing: border-box; text-align: left; margin: 0 0 8px; padding: 10px 12px; background: #fff; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 14px; line-height: 1.3; }
+.picpay-form .picpay-sub:hover { background: #f6f6f6; }
+.picpay-form .picpay-sub.picpay-on { border: 2px solid #21c25e; padding: 9px 11px; }
+.picpay-form .picpay-sub-label { display: block; font-weight: bold; }
+.picpay-form .picpay-sub-desc { display: block; font-size: 12px; color: #666; }
+.picpay-form .picpay-panel { margin: 0 0 8px; padding: 12px; background: #f6f6f6; border-radius: 4px; font-size: 13px; }
+.picpay-form .picpay-panel p { margin: 0 0 6px; }
+.picpay-form .picpay-field { margin: 0 0 10px; }
+.picpay-form .picpay-field label { display: block; margin-bottom: 3px; font-size: 12px; }
+.picpay-form .picpay-field input.input-text, .picpay-form .picpay-field select { width: 100%; box-sizing: border-box; }
+.picpay-form .picpay-row { display: flex; gap: 10px; }
+.picpay-form .picpay-row .picpay-field { flex: 1; }
+.picpay-success { margin: 20px 0; padding: 16px; border: 1px solid #ddd; border-radius: 4px; text-align: center; }
+.picpay-success .picpay-qr img { max-width: 100%; height: auto; }
+.picpay-success .picpay-code { width: 70%; max-width: 100%; }
+.picpay-success .picpay-expired { color: #c00; }
+.picpay-form .picpay-busy { font-size: 12px; color: #666; margin: 6px 0 0; }
