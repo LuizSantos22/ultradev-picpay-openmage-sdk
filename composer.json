@@ -1,6 +1,6 @@
 {
-    "name": "ultradev/openmage-picpay",
-    "description": "PicPay Checkout (Cartão, Pix e Carteira/QR Code) para OpenMage via API, adaptado do módulo oficial Magento 2",
+    "name": "ultradev/picpay-openmage-sdk",
+    "description": "PicPay Checkout (Cartão via SDK, Pix e Carteira/QR Code) para OpenMage, adaptado do módulo oficial Magento 2",
     "type": "magento-module",
     "license": "OSL-3.0",
     "require": {
