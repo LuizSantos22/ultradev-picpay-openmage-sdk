@@ -18,6 +18,17 @@ class Ultradev_Picpay_Block_Form extends Mage_Payment_Block_Form
         return $this->getPicpayHelper()->getEnabledTypes();
     }
 
+    /** Dados públicos usados pelo SDK de tokenização no navegador */
+    public function getSdkConfig()
+    {
+        $helper = $this->getPicpayHelper();
+        return [
+            'sdk-url'           => $helper->getSdkUrl(),
+            'merchant'          => $helper->getMerchantCredential(),
+            'transparent-token' => $helper->getTransparentToken(),
+        ];
+    }
+
     /** @return Mage_Sales_Model_Quote */
     public function getQuote()
     {
@@ -56,4 +67,5 @@ class Ultradev_Picpay_Block_Form extends Mage_Payment_Block_Form
         }
         return $list;
     }
+
 }
