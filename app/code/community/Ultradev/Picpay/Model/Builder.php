@@ -1,6 +1,7 @@
 <?php
 /**
- * Monta os payloads enviados à API (mesmo formato do módulo oficial Magento 2).
+ * Monta os payloads enviados à API.
+ * Cartão: somente o temporaryCardToken gerado pelo SDK no navegador (nenhum dado do cartão passa pelo servidor).
  */
 class Ultradev_Picpay_Model_Builder
 {
@@ -29,25 +30,23 @@ class Ultradev_Picpay_Model_Builder
         if ($name === '' && $order->getBillingAddress()) {
             $name = trim($order->getBillingAddress()->getFirstname() . ' ' . $order->getBillingAddress()->getLastname());
         }
-        return $name;
+        // a API só aceita letras, números, espaço e &
+        return trim(preg_replace('/\s+/', ' ', preg_replace('/[^\p{L}\d &]/u', '', $name)));
     }
 
-    public function card(Mage_Sales_Model_Order $order, Varien_Object $payment)
+    /**
+     * Id único por tentativa (a API falha se um merchantChargeId for reutilizado).
+     * Regex da API: ^[a-zA-Z0-9-]+$ , 6 a 36 caracteres.
+     */
+    public function newChargeId(Mage_Sales_Model_Order $order)
     {
-        return [
-            'cardNumber'         => (string) $payment->getCcNumber(),
-            'cvv'                => (string) $payment->getCcCid(),
-            'cardholderDocument' => $this->getDocument($order, $payment),
-            'expirationMonth'    => (int) $payment->getCcExpMonth(),
-            'expirationYear'     => (int) $payment->getCcExpYear(),
-        ];
+        $base = substr(preg_replace('/[^a-zA-Z0-9-]/', '', (string) $order->getIncrementId()), 0, 24);
+        return $base . '-' . substr(bin2hex(random_bytes(4)), 0, 8);
     }
 
-    public function cardVerification(Mage_Sales_Model_Order $order, Varien_Object $payment)
+    protected function _clean($value, $pattern)
     {
-        $data = $this->card($order, $payment);
-        $data['cardType'] = 'CREDIT';
-        return $data;
+        return trim(preg_replace('/\s+/', ' ', preg_replace($pattern, '', (string) $value)));
     }
 
     protected function _address(Mage_Sales_Model_Order $order)
@@ -58,19 +57,34 @@ class Ultradev_Picpay_Model_Builder
             $n = (int) $helper->getConfig('street_line_' . $key);
             return $n > 0 ? trim((string) $billing->getStreet($n)) : '';
         };
+        $text = '/[^\p{L}\d .\'-]/u';
+        $number = $this->_clean($line('number'), '/[^\p{L}\d .-]/u');
+
         $address = [
-            'street'       => $line('street'),
-            'number'       => $line('number') !== '' ? $line('number') : '0',
-            'neighborhood' => $line('district'),
-            'city'         => (string) $billing->getCity(),
-            'state'        => (string) $billing->getRegionCode(),
-            'country'      => (string) $billing->getCountryId(),
+            'street'       => $this->_clean($line('street'), $text),
+            'number'       => $number !== '' ? $number : 's/n',
+            'neighborhood' => $this->_clean($line('district'), $text),
+            'city'         => $this->_clean($billing->getCity(), $text),
+            'state'        => strtoupper(substr($this->_clean($billing->getRegionCode(), '/[^\p{L}]/u'), 0, 2)),
+            'country'      => $this->_clean($billing->getCountryId(), '/[^\p{L} ]/u'),
             'zipCode'      => $helper->digits($billing->getPostcode()),
         ];
-        if ($line('complement') !== '') {
-            $address['complement'] = $line('complement');
+        $complement = $this->_clean($line('complement'), $text);
+        if ($complement !== '') {
+            $address['complement'] = $complement;
         }
         return $address;
+    }
+
+    /** Somente esquema + host (+ porta não padrão), como exige a API para cartão */
+    protected function _billingUrl()
+    {
+        $parts = parse_url(Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB));
+        $url = $parts['scheme'] . '://' . $parts['host'];
+        if (!empty($parts['port']) && !in_array((int) $parts['port'], [80, 443], true)) {
+            $url .= ':' . $parts['port'];
+        }
+        return $url;
     }
 
     /**
@@ -99,16 +113,17 @@ class Ultradev_Picpay_Model_Builder
             default:
                 $installments = max(1, (int) $payment->getAdditionalInformation('cc_installments'));
                 $tx['paymentType'] = 'CREDIT';
-                $tx['credit'] = $this->card($order, $payment) + [
-                    'cardholderName'    => $payment->getCcOwner() ?: $this->getCustomerName($order),
-                    'installmentNumber' => $installments,
-                    'installmentType'   => $installments > 1 ? 'MERCHANT' : 'NONE',
-                    'billingAddress'    => $this->_address($order),
+                $tx['credit'] = [
+                    'temporaryCardToken' => (string) $payment->getPicpayCardToken(),
+                    'installmentNumber'  => $installments,
+                    'installmentType'    => $installments > 1 ? 'MERCHANT' : 'NONE',
+                    'billingAddress'     => $this->_address($order),
                 ];
         }
 
         $request = [
             'paymentSource'     => 'GATEWAY',
+            'merchantChargeId'  => $this->newChargeId($order),
             'customer'          => [
                 'name'         => $this->getCustomerName($order),
                 'email'        => (string) $order->getCustomerEmail(),
@@ -125,6 +140,9 @@ class Ultradev_Picpay_Model_Builder
             'sourceId'          => (string) Mage::getStoreConfig('general/store_information/name'),
         ];
 
+        if ($type === Ultradev_Picpay_Helper_Data::TYPE_CARD) {
+            $request['billingUrlAddress'] = $this->_billingUrl();
+        }
         // A Carteira não envia lateCapture (igual ao módulo M2)
         if ($type !== Ultradev_Picpay_Helper_Data::TYPE_WALLET) {
             $request['lateCapture'] = $helper->isLateCapture();
