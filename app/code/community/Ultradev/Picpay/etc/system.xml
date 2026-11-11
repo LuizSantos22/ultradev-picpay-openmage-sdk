@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<config>
+    <sections>
+        <payment>
+            <groups>
+                <ultradev_picpay translate="label">
+                    <label>PicPay (Cartão, Pix e Carteira)</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>25</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <active>
+                            <label>Ativo</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </active>
+                        <title>
+                            <label>Título</label><frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>1</show_in_store>
+                            <comment><![CDATA[Nome exibido no checkout (ex.: PicPay)]]></comment>
+                        </title>
+                        <use_sandbox>
+                            <label>Ambiente Sandbox</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>3</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Sim = checkout-api-sandbox.picpay.com]]></comment>
+                        </use_sandbox>
+                        <api_key>
+                            <label>Client ID</label><frontend_type>text</frontend_type>
+                            <sort_order>4</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </api_key>
+                        <api_secret>
+                            <label>Client Secret</label><frontend_type>password</frontend_type><backend_model>adminhtml/system_config_backend_encrypted</backend_model>
+                            <sort_order>5</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </api_secret>
+                        <webhook_token>
+                            <label>Token do webhook</label><frontend_type>password</frontend_type><backend_model>adminhtml/system_config_backend_encrypted</backend_model>
+                            <sort_order>6</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Mesmo token cadastrado no painel PicPay. O webhook é recebido em /picpaycheckout/callback/payments (Authorization: Bearer)]]></comment>
+                        </webhook_token>
+                        <verify_webhook>
+                            <label>Confirmar status na API ao receber webhook</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>7</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Recomendado: consulta a cobrança na PicPay antes de alterar o pedido]]></comment>
+                        </verify_webhook>
+                        <poll_sync>
+                            <label>Sincronizar status na página de sucesso</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>8</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Plano B caso o webhook demore ou falhe]]></comment>
+                        </poll_sync>
+                        <soft_descriptor>
+                            <label>Descrição na fatura (máx. 13)</label><frontend_type>text</frontend_type>
+                            <sort_order>9</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </soft_descriptor>
+                        <enable_card>
+                            <label>Habilitar Cartão de crédito</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>20</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </enable_card>
+                        <label_card>
+                            <label>Rótulo: Cartão</label><frontend_type>text</frontend_type>
+                            <sort_order>21</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>1</show_in_store>
+                        </label_card>
+                        <cc_auto_capture>
+                            <label>Captura automática do cartão</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>22</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Não = autoriza no pedido e captura ao gerar a fatura (invoice) online]]></comment>
+                        </cc_auto_capture>
+                        <max_installments>
+                            <label>Máximo de parcelas (sem juros)</label><frontend_type>text</frontend_type>
+                            <sort_order>23</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </max_installments>
+                        <minimum_installment_amount>
+                            <label>Valor mínimo da parcela (R$)</label><frontend_type>text</frontend_type>
+                            <sort_order>24</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </minimum_installment_amount>
+                        <enable_pix>
+                            <label>Habilitar Pix</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>30</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </enable_pix>
+                        <label_pix>
+                            <label>Rótulo: Pix</label><frontend_type>text</frontend_type>
+                            <sort_order>31</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>1</show_in_store>
+                        </label_pix>
+                        <pix_expiration>
+                            <label>Expiração do Pix (minutos)</label><frontend_type>text</frontend_type>
+                            <sort_order>32</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </pix_expiration>
+                        <enable_wallet>
+                            <label>Habilitar Carteira PicPay (QR Code)</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>40</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </enable_wallet>
+                        <label_wallet>
+                            <label>Rótulo: Carteira</label><frontend_type>text</frontend_type>
+                            <sort_order>41</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>1</show_in_store>
+                        </label_wallet>
+                        <order_status>
+                            <label>Status do pedido (aguardando pagamento)</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_order_status_new</source_model>
+                            <sort_order>50</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </order_status>
+                        <paid_order_status>
+                            <label>Status após pagamento</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_order_status_processing</source_model>
+                            <sort_order>51</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </paid_order_status>
+                        <paid_virtual_order_status>
+                            <label>Status após pagamento (virtual)</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_order_status</source_model>
+                            <sort_order>52</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </paid_virtual_order_status>
+                        <street_line_street>
+                            <label>Linha do endereço: rua</label><frontend_type>select</frontend_type><source_model>ultradev_picpay/source_streetline</source_model>
+                            <sort_order>60</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Qual linha de 'street' do endereço guarda este dado]]></comment>
+                        </street_line_street>
+                        <street_line_number>
+                            <label>Linha do endereço: número</label><frontend_type>select</frontend_type><source_model>ultradev_picpay/source_streetline</source_model>
+                            <sort_order>61</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </street_line_number>
+                        <street_line_complement>
+                            <label>Linha do endereço: complemento (0 = não usar)</label><frontend_type>select</frontend_type><source_model>ultradev_picpay/source_streetline</source_model>
+                            <sort_order>62</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </street_line_complement>
+                        <street_line_district>
+                            <label>Linha do endereço: bairro</label><frontend_type>select</frontend_type><source_model>ultradev_picpay/source_streetline</source_model>
+                            <sort_order>63</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </street_line_district>
+                        <allowspecific>
+                            <label>Países permitidos</label><frontend_type>allowspecific</frontend_type><source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+                            <sort_order>70</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </allowspecific>
+                        <specificcountry>
+                            <label>Países específicos</label><frontend_type>multiselect</frontend_type><source_model>adminhtml/system_config_source_country</source_model>
+                            <sort_order>71</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </specificcountry>
+                        <debug>
+                            <label>Log de depuração</label><frontend_type>select</frontend_type><source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>80</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[var/log/ultradev_picpay.log (dados do cartão são mascarados)]]></comment>
+                        </debug>
+                        <sort_order>
+                            <label>Ordem</label><frontend_type>text</frontend_type>
+                            <sort_order>90</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                        </sort_order>
+                    </fields>
+                </ultradev_picpay>
+            </groups>
+        </payment>
+    </sections>
+</config>
