@@ -9,7 +9,10 @@ $qrCode  = (string) $this->getPicpayInfo('qr_code');
 $seconds = $this->getSecondsLeft();
 $isQr    = in_array($type, ['pix', 'wallet'], true);
 ?>
-<div class="picpay-success" id="picpay-success">
+<div class="picpay-success" id="picpay-success"
+     data-paid="<?php echo $paid ? '1' : '0' ?>"
+     data-seconds="<?php echo (int) $seconds ?>"
+     data-status-url="<?php echo $this->escapeHtml($this->getStatusUrl()) ?>">
     <div class="picpay-paid" id="picpay-paid" style="<?php echo $paid ? '' : 'display:none;' ?>">
         <h2>Pagamento confirmado!</h2>
         <p>Recebemos o seu pagamento via PicPay. Obrigado pela compra.</p>
@@ -27,7 +30,7 @@ $isQr    = in_array($type, ['pix', 'wallet'], true);
             <p>Abra o app PicPay, toque em Pagar e escaneie o QR Code.</p>
         <?php endif; ?>
         <?php if ($qrCode !== ''): ?>
-            <p><input type="text" readonly id="picpay-code" class="input-text picpay-code" value="<?php echo $this->escapeHtml($qrCode) ?>" onclick="this.select();" />
+            <p><input type="text" readonly id="picpay-code" class="input-text picpay-code" value="<?php echo $this->escapeHtml($qrCode) ?>" />
                <button type="button" class="button" id="picpay-copy"><span><span>Copiar código</span></span></button></p>
         <?php endif; ?>
         <?php if ($type === 'pix' && $seconds > 0): ?>
@@ -36,64 +39,9 @@ $isQr    = in_array($type, ['pix', 'wallet'], true);
         <p class="picpay-expired" id="picpay-expired" style="display:none;">O tempo para pagamento expirou. Faça um novo pedido.</p>
     </div>
     <?php elseif ($type === 'card' && !$paid): ?>
-        <div class="picpay-pending">
+        <div class="picpay-pending" id="picpay-pending">
             <h2>Pagamento em análise</h2>
             <p>Seu cartão foi autorizado e o pagamento será confirmado em instantes.</p>
         </div>
     <?php endif; ?>
 </div>
-<?php if ($isQr || $type === 'card'): ?>
-<script type="text/javascript">
-//<![CDATA[
-(function () {
-    var paid = <?php echo $paid ? 'true' : 'false' ?>;
-    var seconds = <?php echo (int) $seconds ?>;
-    var statusUrl = <?php echo json_encode($this->getStatusUrl()) ?>;
-
-    function showPaid(redirect) {
-        var p = document.getElementById('picpay-pending'); if (p) { p.style.display = 'none'; }
-        document.getElementById('picpay-paid').style.display = 'block';
-        if (redirect) { setTimeout(function () { window.location.href = redirect; }, 2500); }
-    }
-
-    var copy = document.getElementById('picpay-copy');
-    if (copy) {
-        copy.addEventListener('click', function () {
-            var input = document.getElementById('picpay-code');
-            input.select();
-            if (navigator.clipboard) { navigator.clipboard.writeText(input.value); } else { document.execCommand('copy'); }
-            copy.getElementsByTagName('span')[1].innerHTML = 'Copiado!';
-        });
-    }
-
-    var timerEl = document.getElementById('picpay-timer');
-    if (timerEl && seconds > 0) {
-        var tick = setInterval(function () {
-            seconds--;
-            if (seconds <= 0) {
-                clearInterval(tick);
-                timerEl.innerHTML = '0:00';
-                if (!paid) { document.getElementById('picpay-expired').style.display = 'block'; }
-                return;
-            }
-            var m = Math.floor(seconds / 60), s = seconds % 60;
-            timerEl.innerHTML = m + ':' + (s < 10 ? '0' : '') + s;
-        }, 1000);
-    }
-
-    if (paid || !window.fetch) { return; }
-    var attempts = 0;
-    var poll = setInterval(function () {
-        if (++attempts > 240) { clearInterval(poll); return; } // ~20 min
-        fetch(statusUrl, {credentials: 'same-origin', cache: 'no-store'})
-            .then(function (r) { return r.json(); })
-            .then(function (d) {
-                if (d && d.paid) { clearInterval(poll); paid = true; showPaid(d.redirect); }
-                else if (d && d.canceled) { clearInterval(poll); }
-            })
-            .catch(function () {});
-    }, 5000);
-}());
-//]]>
-</script>
-<?php endif; ?>
