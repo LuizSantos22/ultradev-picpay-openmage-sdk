@@ -1,0 +1,5 @@
+app/code/community/Ultradev/Picpay   app/code/community/Ultradev/Picpay
+app/etc/modules/Ultradev_Picpay.xml  app/etc/modules/Ultradev_Picpay.xml
+app/design/frontend/base/default/layout/ultradev_picpay.xml  app/design/frontend/base/default/layout/ultradev_picpay.xml
+app/design/frontend/base/default/template/ultradev/picpay    app/design/frontend/base/default/template/ultradev/picpay
+skin/frontend/base/default/ultradev/picpay                   skin/frontend/base/default/ultradev/picpay
