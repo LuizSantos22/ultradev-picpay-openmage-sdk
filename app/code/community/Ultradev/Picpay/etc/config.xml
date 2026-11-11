@@ -39,6 +39,15 @@
                     </ultradev_picpay_invoice_paid>
                 </observers>
             </sales_model_service_quote_submit_success>
+            <sales_convert_quote_payment_to_order_payment>
+                <observers>
+                    <ultradev_picpay_copy_card_token>
+                        <type>singleton</type>
+                        <class>ultradev_picpay/observer</class>
+                        <method>copyCardToken</method>
+                    </ultradev_picpay_copy_card_token>
+                </observers>
+            </sales_convert_quote_payment_to_order_payment>
             <sales_order_payment_cancel>
                 <observers>
                     <ultradev_picpay_cancel_charge>
@@ -76,6 +85,10 @@
                 <title>PicPay</title>
                 <allowspecific>0</allowspecific>
                 <use_sandbox>1</use_sandbox>
+                <api_url_production>https://checkout-api.picpay.com/</api_url_production>
+                <api_url_sandbox>https://checkout-api-sandbox.picpay.com/</api_url_sandbox>
+                <api_path_prefix>api/v1/</api_path_prefix>
+                <sdk_url>https://checkout.picpay.com/cdn/pp-transparent-v1.0.0.js</sdk_url>
                 <debug>1</debug>
                 <verify_webhook>1</verify_webhook>
                 <poll_sync>1</poll_sync>
