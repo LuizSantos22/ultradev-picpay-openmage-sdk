@@ -25,6 +25,21 @@
                             <sort_order>3</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
                             <comment><![CDATA[Sim = checkout-api-sandbox.picpay.com]]></comment>
                         </use_sandbox>
+                        <api_url_production>
+                            <label>URL da API (produção)</label><frontend_type>text</frontend_type>
+                            <sort_order>10</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Padrão: https://checkout-api.picpay.com/ (confirme o host vigente com a PicPay)]]></comment>
+                        </api_url_production>
+                        <api_url_sandbox>
+                            <label>URL da API (sandbox)</label><frontend_type>text</frontend_type>
+                            <sort_order>11</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Padrão: https://checkout-api-sandbox.picpay.com/]]></comment>
+                        </api_url_sandbox>
+                        <api_path_prefix>
+                            <label>Prefixo dos endpoints</label><frontend_type>text</frontend_type>
+                            <sort_order>12</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Padrão: api/v1/ (a autenticação OAuth fica sempre na raiz)]]></comment>
+                        </api_path_prefix>
                         <api_key>
                             <label>Client ID</label><frontend_type>text</frontend_type>
                             <sort_order>4</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
@@ -65,6 +80,21 @@
                             <sort_order>22</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
                             <comment><![CDATA[Não = autoriza no pedido e captura ao gerar a fatura (invoice) online]]></comment>
                         </cc_auto_capture>
+                        <merchant_credential>
+                            <label>CNPJ da loja (merchantCredential)</label><frontend_type>text</frontend_type>
+                            <sort_order>25</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Usado pelo SDK de tokenização. O cartão só aparece no checkout com CNPJ e transparentToken preenchidos.]]></comment>
+                        </merchant_credential>
+                        <transparent_token>
+                            <label>transparentToken (SDK)</label><frontend_type>text</frontend_type>
+                            <sort_order>26</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Fornecido pela PicPay. É público: vai para o navegador junto com o SDK.]]></comment>
+                        </transparent_token>
+                        <sdk_url>
+                            <label>URL do SDK de tokenização</label><frontend_type>text</frontend_type>
+                            <sort_order>27</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
+                            <comment><![CDATA[Padrão: https://checkout.picpay.com/cdn/pp-transparent-v1.0.0.js (produção). Para sandbox, use o script informado pela PicPay.]]></comment>
+                        </sdk_url>
                         <max_installments>
                             <label>Máximo de parcelas (sem juros)</label><frontend_type>text</frontend_type>
                             <sort_order>23</sort_order><show_in_default>1</show_in_default><show_in_website>1</show_in_website><show_in_store>0</show_in_store>
