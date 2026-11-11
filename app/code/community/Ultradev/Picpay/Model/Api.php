@@ -1,23 +1,24 @@
 <?php
 /**
  * Cliente da API PicPay Checkout (OAuth2 client_credentials + JSON).
- * Endpoints espelham o módulo oficial Magento 2 (PicPay_Checkout).
+ * Os hosts e o prefixo de path são configuráveis no admin.
  */
 class Ultradev_Picpay_Model_Api
 {
-    const URL_PRODUCTION = 'https://checkout-api.picpay.com/';
-    const URL_SANDBOX    = 'https://checkout-api-sandbox.picpay.com/';
+    const DEFAULT_URL_PRODUCTION = 'https://checkout-api.picpay.com/';
+    const DEFAULT_URL_SANDBOX    = 'https://checkout-api-sandbox.picpay.com/';
+    const DEFAULT_PATH_PREFIX    = 'api/v1/';
 
-    const PATH_AUTH           = 'oauth2/token';
-    const PATH_CREATE_CARD    = 'api/v1/charge/authorization';
-    const PATH_CREATE_PIX     = 'api/v1/charge/pix';
-    const PATH_CREATE_WALLET  = 'api/v1/charge/wallet';
-    const PATH_CARD_VERIFY    = 'api/v1/cards/verification';
-    const PATH_CHARGE         = 'api/v1/charge/%s';
-    const PATH_CAPTURE        = 'api/v1/charge/%s/capture';
-    const PATH_REFUND         = 'api/v1/charge/%s/refund';
+    // OAuth fica na raiz; os demais paths recebem o prefixo configurado
+    const PATH_AUTH          = 'oauth2/token';
+    const PATH_CREATE_CARD   = 'charge/authorization';
+    const PATH_CREATE_PIX    = 'charge/pix';
+    const PATH_CREATE_WALLET = 'charge/wallet';
+    const PATH_CHARGE        = 'charge/%s';
+    const PATH_CAPTURE       = 'charge/%s/capture';
+    const PATH_REFUND        = 'charge/%s/refund';
 
-    /** @var string|null token em memória durante a requisição */
+    /** @var string|null token em memória durante a requisição (válido 5 min na PicPay) */
     protected static $_token = null;
 
     /** @return Ultradev_Picpay_Helper_Data */
@@ -28,11 +29,26 @@ class Ultradev_Picpay_Model_Api
 
     public function getBaseUrl()
     {
-        return $this->_helper()->isSandbox() ? self::URL_SANDBOX : self::URL_PRODUCTION;
+        $helper = $this->_helper();
+        $url = trim((string) $helper->getConfig($helper->isSandbox() ? 'api_url_sandbox' : 'api_url_production'));
+        if ($url === '') {
+            $url = $helper->isSandbox() ? self::DEFAULT_URL_SANDBOX : self::DEFAULT_URL_PRODUCTION;
+        }
+        return rtrim($url, '/') . '/';
+    }
+
+    public function getPathPrefix()
+    {
+        $prefix = $this->_helper()->getConfig('api_path_prefix');
+        if ($prefix === null) {
+            $prefix = self::DEFAULT_PATH_PREFIX;
+        }
+        $prefix = trim((string) $prefix, '/');
+        return $prefix === '' ? '' : $prefix . '/';
     }
 
     /**
-     * @return array ['status' => int, 'body' => array|string]
+     * @return array ['status' => int, 'body' => array]
      */
     public function request($method, $path, array $data = [], $useAuth = true)
     {
@@ -43,6 +59,7 @@ class Ultradev_Picpay_Model_Api
         ];
         if ($useAuth) {
             $headers[] = 'Authorization: Bearer ' . $this->getToken();
+            $path = $this->getPathPrefix() . $path;
         }
 
         $url = $this->getBaseUrl() . $path;
@@ -106,11 +123,6 @@ class Ultradev_Picpay_Model_Api
         }
         self::$_token = (string) $result['body']['access_token'];
         return self::$_token;
-    }
-
-    public function verifyCard(array $card)
-    {
-        return $this->request('POST', self::PATH_CARD_VERIFY, $card);
     }
 
     public function createCharge($type, array $payload)
