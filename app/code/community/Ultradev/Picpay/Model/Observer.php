@@ -2,6 +2,22 @@
 class Ultradev_Picpay_Model_Observer
 {
     /**
+     * sales_convert_quote_payment_to_order_payment
+     * O core só copia campos conhecidos; o token temporário (em memória) precisa ser repassado.
+     */
+    public function copyCardToken(Varien_Event_Observer $observer)
+    {
+        $quotePayment = $observer->getEvent()->getQuotePayment();
+        $orderPayment = $observer->getEvent()->getOrderPayment();
+        if ($quotePayment && $orderPayment
+            && $quotePayment->getMethod() === Ultradev_Picpay_Helper_Data::CODE
+            && $quotePayment->getPicpayCardToken()) {
+            $orderPayment->setPicpayCardToken($quotePayment->getPicpayCardToken());
+        }
+        return $this;
+    }
+
+    /**
      * sales_model_service_quote_submit_success
      * Cartão aprovado na hora (PAID): gera a fatura logo após o pedido.
      */
