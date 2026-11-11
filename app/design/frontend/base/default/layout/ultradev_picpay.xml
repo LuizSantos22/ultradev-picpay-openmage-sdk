@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <default>
+        <reference name="head">
+            <action method="addItem"><type>skin_css</type><name>ultradev/picpay/picpay.css</name></action>
+        </reference>
+    </default>
+
+    <checkout_onepage_success>
+        <reference name="content">
+            <block type="ultradev_picpay/success" name="ultradev_picpay.success" after="checkout.success" template="ultradev/picpay/success.phtml"/>
+        </reference>
+    </checkout_onepage_success>
+</layout>
