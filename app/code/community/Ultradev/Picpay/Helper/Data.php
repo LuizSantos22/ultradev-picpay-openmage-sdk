@@ -25,6 +25,9 @@ class Ultradev_Picpay_Helper_Data extends Mage_Core_Helper_Abstract
     {
         $types = [];
         foreach ([self::TYPE_CARD, self::TYPE_PIX, self::TYPE_WALLET] as $type) {
+            if ($type === self::TYPE_CARD && !$this->isTokenizationConfigured($storeId)) {
+                continue; // cartão só com SDK de tokenização configurado
+            }
             if ($this->getConfigFlag('enable_' . $type, $storeId)) {
                 $types[$type] = (string) $this->getConfig('label_' . $type, $storeId);
             }
@@ -55,6 +58,27 @@ class Ultradev_Picpay_Helper_Data extends Mage_Core_Helper_Abstract
     public function getWebhookToken($storeId = null)
     {
         return trim((string) Mage::helper('core')->decrypt($this->getConfig('webhook_token', $storeId)));
+    }
+
+    public function getMerchantCredential($storeId = null)
+    {
+        return $this->digits($this->getConfig('merchant_credential', $storeId));
+    }
+
+    public function getTransparentToken($storeId = null)
+    {
+        return trim((string) $this->getConfig('transparent_token', $storeId));
+    }
+
+    public function getSdkUrl($storeId = null)
+    {
+        $url = trim((string) $this->getConfig('sdk_url', $storeId));
+        return $url !== '' ? $url : 'https://checkout.picpay.com/cdn/pp-transparent-v1.0.0.js';
+    }
+
+    public function isTokenizationConfigured($storeId = null)
+    {
+        return $this->getMerchantCredential($storeId) !== '' && $this->getTransparentToken($storeId) !== '';
     }
 
     public function isSandbox($storeId = null)
